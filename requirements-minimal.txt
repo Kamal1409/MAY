@@ -1,0 +1,12 @@
+# Minimal dependencies needed for Child Agent testing
+# Install these first before running full requirements.txt
+
+# Core utilities
+loguru>=0.7.2
+pydantic>=2.5.0
+python-dotenv>=1.0.0
+pyyaml>=6.0.1
+
+# System operations (required for Child Agent)
+psutil>=5.9.6
+pyautogui>=0.9.54

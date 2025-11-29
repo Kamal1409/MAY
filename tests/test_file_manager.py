@@ -5,7 +5,15 @@ Unit tests for File Manager module
 import pytest
 import tempfile
 import os
+import sys
 from pathlib import Path
+
+# Add project root to path to ensure we import the local 'agents' module
+# instead of any installed 'agents' package in site-packages
+project_root = Path(__file__).parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
 from agents.child_agent.file_manager import FileManager, FileOperation
 
 
