@@ -357,24 +357,44 @@ class SystemMonitor:
         try:
             processes = []
             
-            for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent', 'memory_info']):
+            # First pass: get all processes and start CPU measurement
+            procs = []
+            for proc in psutil.process_iter(['pid', 'name']):
                 try:
-                    info = proc.info
-                    processes.append({
-                        'pid': info['pid'],
-                        'name': info['name'],
-                        'cpu_percent': info['cpu_percent'],
-                        'memory_percent': info['memory_percent'],
-                        'memory_mb': info['memory_info'].rss / 1024 / 1024 if info['memory_info'] else 0
-                    })
+                    # Initialize CPU percent measurement
+                    proc.cpu_percent(interval=None)
+                    procs.append(proc)
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
             
-            # Sort processes
+            # Wait a bit for CPU measurement
+            import time
+            time.sleep(0.5)
+            
+            # Second pass: get actual CPU usage and other info
+            for proc in procs:
+                try:
+                    cpu_pct = proc.cpu_percent(interval=None)
+                    mem_info = proc.memory_info()
+                    mem_pct = proc.memory_percent()
+                    
+                    processes.append({
+                        'pid': proc.pid,
+                        'name': proc.name(),
+                        'cpu_percent': cpu_pct,
+                        'memory_percent': mem_pct,
+                        'memory_mb': mem_info.rss / 1024 / 1024 if mem_info else 0
+                    })
+                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                    continue
+            
+            # Sort processes with secondary sort key
             if sort_by == 'cpu':
-                processes.sort(key=lambda x: x['cpu_percent'] or 0, reverse=True)
+                # Sort by CPU first, then by memory as secondary
+                processes.sort(key=lambda x: (x['cpu_percent'] or 0, x['memory_mb'] or 0), reverse=True)
             elif sort_by == 'memory':
-                processes.sort(key=lambda x: x['memory_percent'] or 0, reverse=True)
+                # Sort by memory first, then by CPU as secondary
+                processes.sort(key=lambda x: (x['memory_percent'] or 0, x['cpu_percent'] or 0), reverse=True)
             
             top_processes = processes[:limit]
             
