@@ -40,9 +40,9 @@ class ChildAgent(BaseAgent):
         'launch_app', 'close_app', 'list_processes', 'get_process_info',
         'type_text', 'press_key', 'click_mouse', 'get_screen_size',
         # System monitoring
-        'get_cpu_info', 'get_memory_info', 'get_disk_info', 'get_network_info',
-        'get_system_info', 'get_current_metrics', 'get_top_processes',
-        'check_resource_thresholds'
+        'get_cpu_info', 'get_memory_info', 'get_disk_info', 'get_all_disks_info',
+        'get_network_info', 'get_network_interfaces', 'get_system_info',
+        'get_current_metrics', 'get_top_processes', 'check_resource_thresholds'
     }
     
     def __init__(
@@ -278,6 +278,14 @@ class ChildAgent(BaseAgent):
                 error=info.get('error')
             )
         
+        elif action_type == 'get_all_disks_info':
+            disks = self.system_monitor.get_all_disks_info()
+            return AgentResult(
+                action_id=action.action_id,
+                success=True,
+                result=disks
+            )
+        
         elif action_type == 'get_network_info':
             info = self.system_monitor.get_network_info()
             return AgentResult(
@@ -285,6 +293,15 @@ class ChildAgent(BaseAgent):
                 success='error' not in info,
                 result=info,
                 error=info.get('error')
+            )
+        
+        elif action_type == 'get_network_interfaces':
+            interfaces = self.system_monitor.get_network_interfaces()
+            return AgentResult(
+                action_id=action.action_id,
+                success='error' not in interfaces,
+                result=interfaces,
+                error=interfaces.get('error')
             )
         
         elif action_type == 'get_system_info':
@@ -369,8 +386,8 @@ class ChildAgent(BaseAgent):
                 ],
                 'system_monitoring': [
                     'get_cpu_info', 'get_memory_info', 'get_disk_info',
-                    'get_network_info', 'get_system_info',
-                    'get_current_metrics', 'get_top_processes',
+                    'get_all_disks_info', 'get_network_info', 'get_network_interfaces',
+                    'get_system_info', 'get_current_metrics', 'get_top_processes',
                     'check_resource_thresholds'
                 ]
             },
